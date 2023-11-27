@@ -1,18 +1,16 @@
-from sklearn.neighbors import NearestNeighbors
-import numpy as np
-import glob
-import laspy
-from sklearn.neighbors import NearestNeighbors
-from multiprocessing import Pool, get_context
-import pandas as pd
 import os
 import shutil
-from sklearn.cluster import DBSCAN
-from scipy.interpolate import griddata
 from copy import deepcopy
-import hdbscan
 from multiprocessing import get_context
+
+import hdbscan
+import laspy
+import numpy as np
+import pandas as pd
 from scipy import spatial
+from scipy.interpolate import griddata
+from sklearn.cluster import DBSCAN
+from sklearn.neighbors import NearestNeighbors
 
 
 def get_fsct_path(location_in_fsct=""):
@@ -44,7 +42,9 @@ def make_folder_structure(filename):
 
 def subsample(args):
     X, min_spacing = args
-    neighbours = NearestNeighbors(n_neighbors=2, algorithm="kd_tree", metric="euclidean").fit(X[:, :3])
+    neighbours = NearestNeighbors(
+        n_neighbors=2, algorithm="kd_tree", metric="euclidean"
+    ).fit(X[:, :3])
     distances, indices = neighbours.kneighbors(X[:, :3])
     X_keep = X[distances[:, 1] >= min_spacing]
     i1 = [distances[:, 1] < min_spacing][0]
@@ -52,7 +52,9 @@ def subsample(args):
     X_check = X[np.logical_and(i1, i2)]
 
     while np.shape(X_check)[0] > 1:
-        neighbours = NearestNeighbors(n_neighbors=2, algorithm="kd_tree", metric="euclidean").fit(X_check[:, :3])
+        neighbours = NearestNeighbors(
+            n_neighbors=2, algorithm="kd_tree", metric="euclidean"
+        ).fit(X_check[:, :3])
         distances, indices = neighbours.kneighbors(X_check[:, :3])
         X_keep = np.vstack((X_keep, X_check[distances[:, 1] >= min_spacing, :]))
         i1 = [distances[:, 1] < min_spacing][0]
@@ -83,10 +85,19 @@ def subsample_point_cloud(pointcloud, min_spacing, num_cpu_cores=1):
         kdtree = spatial.cKDTree(np.atleast_2d(pointcloud[:, 0]).T, leafsize=10000)
         for i in range(num_slices):
             min_bound = Xmin + i * (Xrange / num_slices)
-            results = kdtree.query_ball_point(np.array([min_bound]), r=Xrange / num_slices)
+            results = kdtree.query_ball_point(
+                np.array([min_bound]), r=Xrange / num_slices
+            )
             # mask = np.logical_and(pointcloud[:, 0] >= min_bound, pointcloud[:, 0] < max_bound)
             pc_slice = pointcloud[results]
-            print("Slice size:", pc_slice.shape[0], "    Slice number:", i + 1, "/", num_slices)
+            print(
+                "Slice size:",
+                pc_slice.shape[0],
+                "    Slice number:",
+                i + 1,
+                "/",
+                num_slices,
+            )
             slice_list.append([pc_slice, min_spacing])
 
         pointcloud = np.zeros((0, pointcloud.shape[1]))
@@ -102,13 +113,13 @@ def subsample_point_cloud(pointcloud, min_spacing, num_cpu_cores=1):
 
 
 def load_file(
-    filename,
-    plot_centre=None,
-    plot_radius=0,
-    plot_radius_buffer=0,
-    silent=False,
-    headers_of_interest=None,
-    return_num_points=False,
+        filename,
+        plot_centre=None,
+        plot_radius=0,
+        plot_radius_buffer=0,
+        silent=False,
+        headers_of_interest=None,
+        return_num_points=False,
 ):
     if headers_of_interest is None:
         headers_of_interest = []
@@ -139,7 +150,9 @@ def load_file(
         pointcloud = pointcloud.transpose()
 
     elif file_extension == ".csv":
-        pointcloud = np.array(pd.read_csv(filename, header=None, index_col=None, delim_whitespace=True))
+        pointcloud = np.array(
+            pd.read_csv(filename, header=None, index_col=None, delim_whitespace=True)
+        )
 
     original_num_points = pointcloud.shape[0]
 
@@ -189,7 +202,9 @@ def save_file(filename, pointcloud, headers_of_interest=None, silent=False):
                     if header in ["red", "green", "blue"]:
                         setattr(las, header, column)
                     else:
-                        las.add_extra_dim(laspy.ExtraBytesParams(name=header, type="f8"))
+                        las.add_extra_dim(
+                            laspy.ExtraBytesParams(name=header, type="f8")
+                        )
                         setattr(las, header, column)
             las.write(filename)
             if not silent:
@@ -202,20 +217,32 @@ def save_file(filename, pointcloud, headers_of_interest=None, silent=False):
 
 def get_heights_above_DTM(points, DTM):
     print("Getting heights above DTM...")
-    grid = griddata((DTM[:, 0], DTM[:, 1]), DTM[:, 2], points[:, 0:2], method="linear", fill_value=np.median(DTM[:, 2]))
+    grid = griddata(
+        (DTM[:, 0], DTM[:, 1]),
+        DTM[:, 2],
+        points[:, 0:2],
+        method="linear",
+        fill_value=np.median(DTM[:, 2]),
+    )
     points[:, -1] = points[:, 2] - grid
     return points
 
 
 def cluster_dbscan(points, eps=0.05, min_samples=2, n_jobs=1):
-    db = DBSCAN(eps=eps, min_samples=min_samples, metric="euclidean", algorithm="kd_tree", n_jobs=n_jobs).fit(
-        points[:, :3]
-    )
+    db = DBSCAN(
+        eps=eps,
+        min_samples=min_samples,
+        metric="euclidean",
+        algorithm="kd_tree",
+        n_jobs=n_jobs,
+    ).fit(points[:, :3])
     return np.hstack((points, np.atleast_2d(db.labels_).T))
 
 
 def cluster_hdbscan(points, min_cluster_size=30):
-    cluster_labels = hdbscan.HDBSCAN(min_cluster_size=min_cluster_size).fit_predict(points[:, :3])
+    cluster_labels = hdbscan.HDBSCAN(min_cluster_size=min_cluster_size).fit_predict(
+        points[:, :3]
+    )
     return np.hstack((points, np.atleast_2d(cluster_labels).T))
 
 
@@ -224,13 +251,19 @@ def clustering(points, eps=0.05, min_samples=2, n_jobs=1, mode="DBSCAN"):
     assert mode == "DBSCAN" or mode == "HDBSCAN"
 
     if mode == "HDBSCAN":
-        cluster_labels = hdbscan.HDBSCAN(min_cluster_size=100).fit_predict(points[:, :3])
+        cluster_labels = hdbscan.HDBSCAN(min_cluster_size=100).fit_predict(
+            points[:, :3]
+        )
         return np.hstack((points, np.atleast_2d(cluster_labels).T))
 
     elif mode == "DBSCAN":
-        db = DBSCAN(eps=eps, min_samples=min_samples, metric="euclidean", algorithm="kd_tree", n_jobs=n_jobs).fit(
-            points[:, :3]
-        )
+        db = DBSCAN(
+            eps=eps,
+            min_samples=min_samples,
+            metric="euclidean",
+            algorithm="kd_tree",
+            n_jobs=n_jobs,
+        ).fit(points[:, :3])
         return np.hstack((points, np.atleast_2d(db.labels_).T))
 
 
@@ -254,7 +287,9 @@ def low_resolution_hack_mode(point_cloud, num_iterations, min_spacing, num_cpu_c
     return point_cloud
 
 
-def get_taper(single_tree_cyls, slice_heights, tree_base_height, taper_slice_thickness, plot_id=0):
+def get_taper(
+        single_tree_cyls, slice_heights, tree_base_height, taper_slice_thickness, plot_id=0
+):
     cyl_dict = dict(
         x=0,
         y=1,
@@ -282,8 +317,10 @@ def get_taper(single_tree_cyls, slice_heights, tree_base_height, taper_slice_thi
     for height in slice_heights:
         results = single_tree_cyls[
             np.logical_and(
-                single_tree_cyls[:, 2] >= tree_base_height + height - taper_slice_thickness * 0.5,
-                single_tree_cyls[:, 2] <= tree_base_height + height + taper_slice_thickness * 0.5,
+                single_tree_cyls[:, 2]
+                >= tree_base_height + height - taper_slice_thickness * 0.5,
+                single_tree_cyls[:, 2]
+                <= tree_base_height + height + taper_slice_thickness * 0.5,
             )
         ]
         if results.shape[0] > 0:
@@ -291,4 +328,6 @@ def get_taper(single_tree_cyls, slice_heights, tree_base_height, taper_slice_thi
             diameters.append(results[index, cyl_dict["radius"]] * 2)
         else:
             diameters.append(0)
-    return np.hstack((np.array([[plot_id, tree_id, x_base, y_base, z_base]]), np.array([diameters])))
+    return np.hstack(
+        (np.array([[plot_id, tree_id, x_base, y_base, z_base]]), np.array([diameters]))
+    )

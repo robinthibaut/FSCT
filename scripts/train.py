@@ -1,17 +1,19 @@
-from tools import load_file, save_file, get_fsct_path
-from model import Net
-from train_datasets import TrainingDataset, ValidationDataset
-from fsct_exceptions import NoDataFound
+import glob
+import os
+import random
+import shutil
+import threading
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch_geometric.data import DataLoader
-import glob
-import random
-import threading
-import os
-import shutil
+
+from fsct_exceptions import NoDataFound
+from model import Net
+from tools import load_file, save_file, get_fsct_path
+from train_datasets import TrainingDataset, ValidationDataset
 
 
 class TrainModel:
@@ -21,7 +23,13 @@ class TrainModel:
         if self.parameters["num_cpu_cores_preprocessing"] == 0:
             print("Using default number of CPU cores (all of them).")
             self.parameters["num_cpu_cores_preprocessing"] = os.cpu_count()
-        print("Processing using ", self.parameters["num_cpu_cores_preprocessing"], "/", os.cpu_count(), " CPU cores.")
+        print(
+            "Processing using ",
+            self.parameters["num_cpu_cores_preprocessing"],
+            "/",
+            os.cpu_count(),
+            " CPU cores.",
+        )
 
         if self.parameters["preprocess_train_datasets"]:
             self.preprocessing_setup("train")
@@ -48,7 +56,10 @@ class TrainModel:
                 os.makedirs(directory)
                 print(directory, "directory created.")
 
-            elif "sample_dir" in directory and self.parameters["clean_sample_directories"]:
+            elif (
+                    "sample_dir" in directory
+                    and self.parameters["clean_sample_directories"]
+            ):
                 shutil.rmtree(directory, ignore_errors=True)
                 os.makedirs(directory)
                 print(directory, "directory created.")
@@ -58,18 +69,31 @@ class TrainModel:
 
     def preprocessing_setup(self, data_subdirectory):
         self.check_and_fix_data_directory_structure(data_subdirectory)
-        point_cloud_list = glob.glob(get_fsct_path("data") + "/" + data_subdirectory + "/*.las")
+        point_cloud_list = glob.glob(
+            get_fsct_path("data") + "/" + data_subdirectory + "/*.las"
+        )
         if len(point_cloud_list) > 0:
             print("Preprocessing train_dataset point clouds...")
             for point_cloud_file in point_cloud_list:
                 print(point_cloud_file)
-                point_cloud, headers = load_file(point_cloud_file, headers_of_interest=["x", "y", "z", "label"])
+                point_cloud, headers = load_file(
+                    point_cloud_file, headers_of_interest=["x", "y", "z", "label"]
+                )
                 self.preprocess_point_cloud(
-                    point_cloud, get_fsct_path("data") + "/" + data_subdirectory + "/sample_dir/"
+                    point_cloud,
+                    get_fsct_path("data") + "/" + data_subdirectory + "/sample_dir/",
                 )
 
     @staticmethod
-    def threaded_boxes(point_cloud, box_size, min_points_per_box, max_points_per_box, path, id_offset, point_divisions):
+    def threaded_boxes(
+            point_cloud,
+            box_size,
+            min_points_per_box,
+            max_points_per_box,
+            path,
+            id_offset,
+            point_divisions,
+    ):
         box_size = np.array(box_size)
         box_centre_mins = point_divisions - 0.5 * box_size
         box_centre_maxes = point_divisions + 0.5 * box_size
@@ -80,10 +104,19 @@ class TrainModel:
             box = box[
                 np.logical_and(
                     np.logical_and(
-                        np.logical_and(box[:, 0] >= box_centre_mins[i, 0], box[:, 0] < box_centre_maxes[i, 0]),
-                        np.logical_and(box[:, 1] >= box_centre_mins[i, 1], box[:, 1] < box_centre_maxes[i, 1]),
+                        np.logical_and(
+                            box[:, 0] >= box_centre_mins[i, 0],
+                            box[:, 0] < box_centre_maxes[i, 0],
+                        ),
+                        np.logical_and(
+                            box[:, 1] >= box_centre_mins[i, 1],
+                            box[:, 1] < box_centre_maxes[i, 1],
+                        ),
                     ),
-                    np.logical_and(box[:, 2] >= box_centre_mins[i, 2], box[:, 2] < box_centre_maxes[i, 2]),
+                    np.logical_and(
+                        box[:, 2] >= box_centre_mins[i, 2],
+                        box[:, 2] < box_centre_maxes[i, 2],
+                    ),
                 )
             ]
 
@@ -110,11 +143,11 @@ class TrainModel:
     def preprocess_point_cloud(self, point_cloud, sample_dir):
         def get_box_centre_list(point_cloud_mins, num_boxes_array):
             box_centre_list = []
-            for (dimension_min, dimension_num_boxes, box_size_m, box_overlap) in zip(
-                point_cloud_mins,
-                num_boxes_array,
-                self.parameters["sample_box_size_m"],
-                self.parameters["sample_box_overlap"],
+            for dimension_min, dimension_num_boxes, box_size_m, box_overlap in zip(
+                    point_cloud_mins,
+                    num_boxes_array,
+                    self.parameters["sample_box_size_m"],
+                    self.parameters["sample_box_overlap"],
             ):
                 box_centre_list.append(
                     np.linspace(
@@ -134,8 +167,16 @@ class TrainModel:
         point_cloud_ranges = point_cloud_maxes - point_cloud_mins
         point_cloud_centre = point_cloud_mins + 0.5 * point_cloud_ranges
 
-        num_boxes_array = np.ceil(point_cloud_ranges / self.parameters["sample_box_size_m"])
-        box_centres = np.vstack(np.meshgrid(*get_box_centre_list(point_cloud_mins, num_boxes_array))).reshape(3, -1).T
+        num_boxes_array = np.ceil(
+            point_cloud_ranges / self.parameters["sample_box_size_m"]
+        )
+        box_centres = (
+            np.vstack(
+                np.meshgrid(*get_box_centre_list(point_cloud_mins, num_boxes_array))
+            )
+            .reshape(3, -1)
+            .T
+        )
 
         point_divisions = []
         for thread in range(self.parameters["num_cpu_cores_preprocessing"]):
@@ -153,7 +194,12 @@ class TrainModel:
         id_offset = 0
         training_data_list = glob.glob(sample_dir + "*.npy")
         if len(training_data_list) > 0:
-            id_offset = np.max([int(os.path.basename(i).split(".")[0]) for i in training_data_list]) + 1
+            id_offset = (
+                    np.max(
+                        [int(os.path.basename(i).split(".")[0]) for i in training_data_list]
+                    )
+                    + 1
+            )
 
         for thread in range(self.parameters["num_cpu_cores_preprocessing"]):
             for t in range(thread):
@@ -180,15 +226,28 @@ class TrainModel:
 
     def update_log(self, epoch, epoch_loss, epoch_acc, val_epoch_loss, val_epoch_acc):
         self.training_history = np.vstack(
-            (self.training_history, np.array([[epoch, epoch_loss, epoch_acc, val_epoch_loss, val_epoch_acc]]))
+            (
+                self.training_history,
+                np.array(
+                    [[epoch, epoch_loss, epoch_acc, val_epoch_loss, val_epoch_acc]]
+                ),
+            )
         )
         try:
-            np.savetxt(os.path.join(get_fsct_path("model"), "training_history.csv"), self.training_history)
+            np.savetxt(
+                os.path.join(get_fsct_path("model"), "training_history.csv"),
+                self.training_history,
+            )
         except PermissionError:
-            print("training_history not saved this epoch, please close training_history.csv to enable saving.")
+            print(
+                "training_history not saved this epoch, please close training_history.csv to enable saving."
+            )
             try:
                 np.savetxt(
-                    os.path.join(get_fsct_path("model"), "training_history_permission_error_backup.csv"),
+                    os.path.join(
+                        get_fsct_path("model"),
+                        "training_history_permission_error_backup.csv",
+                    ),
                     self.training_history,
                 )
             except PermissionError:
@@ -247,7 +306,11 @@ class TrainModel:
             print("Loading existing model...")
             try:
                 model.load_state_dict(
-                    torch.load(os.path.join(get_fsct_path("model"), self.parameters["model_filename"])),
+                    torch.load(
+                        os.path.join(
+                            get_fsct_path("model"), self.parameters["model_filename"]
+                        )
+                    ),
                     strict=False,
                 )
 
@@ -255,25 +318,32 @@ class TrainModel:
                 print("File not found, creating new model...")
                 torch.save(
                     model.state_dict(),
-                    os.path.join(get_fsct_path("model"), self.parameters["model_filename"]),
+                    os.path.join(
+                        get_fsct_path("model"), self.parameters["model_filename"]
+                    ),
                 )
 
             try:
-                self.training_history = np.loadtxt(os.path.join(get_fsct_path("model"), "training_history.csv"))
+                self.training_history = np.loadtxt(
+                    os.path.join(get_fsct_path("model"), "training_history.csv")
+                )
                 print("Loaded training history successfully.")
             except OSError:
                 pass
 
         model = model.to(self.device)
         optimizer = optim.Adam(
-            filter(lambda p: p.requires_grad, model.parameters()), lr=self.parameters["learning_rate"]
+            filter(lambda p: p.requires_grad, model.parameters()),
+            lr=self.parameters["learning_rate"],
         )
         criterion = nn.CrossEntropyLoss()
         val_epoch_loss = 0
         val_epoch_acc = 0
 
         for epoch in range(self.parameters["num_epochs"]):
-            print("=====================================================================")
+            print(
+                "====================================================================="
+            )
             print("EPOCH ", epoch)
             # TRAINING
             model.train()
@@ -297,7 +367,13 @@ class TrainModel:
                 running_point_cloud_vis = np.vstack(
                     (
                         running_point_cloud_vis,
-                        np.hstack((data.pos.cpu() + np.array([i * 7, 0, 0]), data.y.cpu().T, preds.cpu().T)),
+                        np.hstack(
+                            (
+                                data.pos.cpu() + np.array([i * 7, 0, 0]),
+                                data.y.cpu().T,
+                                preds.cpu().T,
+                            )
+                        ),
                     )
                 )
                 if i % 20 == 0:
@@ -310,7 +386,9 @@ class TrainModel:
 
                     if self.parameters["generate_point_cloud_vis"]:
                         save_file(
-                            os.path.join(get_fsct_path("data"), "latest_prediction.las"),
+                            os.path.join(
+                                get_fsct_path("data"), "latest_prediction.las"
+                            ),
                             running_point_cloud_vis,
                             headers_of_interest=["x", "y", "z", "label", "prediction"],
                         )
@@ -318,7 +396,13 @@ class TrainModel:
             epoch_loss = running_loss / len(self.train_loader)
             epoch_acc = running_acc / len(self.train_loader)
             self.update_log(epoch, epoch_loss, epoch_acc, val_epoch_loss, val_epoch_acc)
-            print("Train epoch accuracy: ", np.around(epoch_acc, 4), ", Loss: ", np.around(epoch_loss, 4), "\n")
+            print(
+                "Train epoch accuracy: ",
+                np.around(epoch_acc, 4),
+                ", Loss: ",
+                np.around(epoch_loss, 4),
+                "\n",
+            )
 
             # VALIDATION
             print("Validation")
@@ -337,7 +421,9 @@ class TrainModel:
 
                     _, preds = torch.max(outputs, 1)
                     running_loss += loss.detach().item()
-                    running_acc += torch.sum(preds == data.y.data).item() / data.y.shape[1]
+                    running_acc += (
+                            torch.sum(preds == data.y.data).item() / data.y.shape[1]
+                    )
                     if i % 50 == 0:
                         print(
                             "Validation sample accuracy: ",
@@ -349,11 +435,18 @@ class TrainModel:
                     i += 1
                 val_epoch_loss = running_loss / len(self.validation_loader)
                 val_epoch_acc = running_acc / len(self.validation_loader)
-                self.update_log(epoch, epoch_loss, epoch_acc, val_epoch_loss, val_epoch_acc)
-                print(
-                    "Validation epoch accuracy: ", np.around(val_epoch_acc, 4), ", Loss: ", np.around(val_epoch_loss, 4)
+                self.update_log(
+                    epoch, epoch_loss, epoch_acc, val_epoch_loss, val_epoch_acc
                 )
-                print("=====================================================================")
+                print(
+                    "Validation epoch accuracy: ",
+                    np.around(val_epoch_acc, 4),
+                    ", Loss: ",
+                    np.around(val_epoch_loss, 4),
+                )
+                print(
+                    "====================================================================="
+                )
             torch.save(
                 model.state_dict(),
                 os.path.join(get_fsct_path("model"), self.parameters["model_filename"]),
@@ -366,7 +459,8 @@ if __name__ == "__main__":
         preprocess_validation_datasets=1,
         clean_sample_directories=1,  # Deletes all samples in the sample directories.
         perform_validation_during_training=1,
-        generate_point_cloud_vis=0,  # Useful for visually checking how well the model is learning. Saves a set of samples called "latest_prediction.las" in the "FSCT/data/"" directory. Samples have label and prediction values.
+        generate_point_cloud_vis=0,
+        # Useful for visually checking how well the model is learning. Saves a set of samples called "latest_prediction.las" in the "FSCT/data/"" directory. Samples have label and prediction values.
         load_existing_model=1,
         num_epochs=2000,
         learning_rate=0.000025,

@@ -1,5 +1,6 @@
-import numpy as np
 import random
+
+import numpy as np
 
 
 def augmentations(x, no_terrain, no_cwd):
@@ -32,7 +33,9 @@ def augmentations(x, no_terrain, no_cwd):
             ]
         )
 
-        points[:, :3] = np.matmul(np.matmul(np.matmul(points[:, :3], roll_mat), pitch_mat), yaw_mat)
+        points[:, :3] = np.matmul(
+            np.matmul(np.matmul(points[:, :3], roll_mat), pitch_mat), yaw_mat
+        )
         return points
 
     def random_scale_change(points, min_multiplier, max_multiplier):
@@ -48,7 +51,9 @@ def augmentations(x, no_terrain, no_cwd):
         # 50% chance per sample of adding noise.
         random_noise_std_dev = np.random.uniform(0.01, 0.025)
         if np.random.uniform(0, 1) >= 0.5:
-            points = points + np.random.normal(0, random_noise_std_dev, size=(np.shape(points)[0], 3))
+            points = points + np.random.normal(
+                0, random_noise_std_dev, size=(np.shape(points)[0], 3)
+            )
         return points
 
     if no_terrain and no_cwd:

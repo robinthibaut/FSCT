@@ -1,16 +1,18 @@
-import numpy as np
-import time
-import glob
-import random
-import pandas as pd
-from copy import deepcopy
-import matplotlib
-from scipy import spatial
-from sklearn.neighbors import NearestNeighbors
-import threading
-from tools import load_file, save_file, make_folder_structure, subsample_point_cloud, low_resolution_hack_mode
 import os
-from multiprocessing import get_context
+import random
+import threading
+import time
+
+import numpy as np
+import pandas as pd
+
+from tools import (
+    load_file,
+    save_file,
+    make_folder_structure,
+    subsample_point_cloud,
+    low_resolution_hack_mode,
+)
 
 
 class Preprocessing:
@@ -18,7 +20,9 @@ class Preprocessing:
         self.preprocessing_time_start = time.time()
         self.parameters = parameters
         self.filename = self.parameters["point_cloud_filename"].replace("\\", "/")
-        self.directory = os.path.dirname(os.path.realpath(self.filename)).replace("\\", "/") + "/"
+        self.directory = (
+                os.path.dirname(os.path.realpath(self.filename)).replace("\\", "/") + "/"
+        )
         self.filename = self.filename.split("/")[-1]
         self.box_dimensions = np.array(self.parameters["box_dimensions"])
         self.box_overlap = np.array(self.parameters["box_overlap"])
@@ -26,7 +30,9 @@ class Preprocessing:
         self.max_points_per_box = self.parameters["max_points_per_box"]
         self.num_cpu_cores = parameters["num_cpu_cores"]
 
-        self.output_dir, self.working_dir = make_folder_structure(self.directory + self.filename)
+        self.output_dir, self.working_dir = make_folder_structure(
+            self.directory + self.filename
+        )
 
         self.point_cloud, headers, self.num_points_orig = load_file(
             filename=self.directory + self.filename,
@@ -46,7 +52,9 @@ class Preprocessing:
 
         if self.parameters["subsample"]:
             self.point_cloud = subsample_point_cloud(
-                self.point_cloud, self.parameters["subsampling_min_spacing"], self.num_cpu_cores
+                self.point_cloud,
+                self.parameters["subsampling_min_spacing"],
+                self.num_cpu_cores,
             )
 
         self.num_points_subsampled = self.point_cloud.shape[0]
@@ -57,7 +65,9 @@ class Preprocessing:
             headers_of_interest=["x", "y", "z", "red", "green", "blue"],
         )
 
-        self.point_cloud = self.point_cloud[:, :3]  # Trims off unneeded dimensions if present.
+        self.point_cloud = self.point_cloud[
+                           :, :3
+                           ]  # Trims off unneeded dimensions if present.
 
         if self.parameters["low_resolution_point_cloud_hack_mode"]:
             self.point_cloud = low_resolution_hack_mode(
@@ -67,14 +77,26 @@ class Preprocessing:
                 self.parameters["num_cpu_cores"],
             )
 
-            save_file(self.output_dir + self.filename[:-4] + "_hack_mode_cloud.las", self.point_cloud)
+            save_file(
+                self.output_dir + self.filename[:-4] + "_hack_mode_cloud.las",
+                self.point_cloud,
+            )
 
         # Global shift the point cloud to avoid loss of precision during segmentation.
-        self.point_cloud[:, :2] = self.point_cloud[:, :2] - self.parameters["plot_centre"]
+        self.point_cloud[:, :2] = (
+                self.point_cloud[:, :2] - self.parameters["plot_centre"]
+        )
 
     @staticmethod
-    def threaded_boxes(point_cloud, box_size, min_points_per_box, max_points_per_box, path, id_offset, point_divisions):
-
+    def threaded_boxes(
+            point_cloud,
+            box_size,
+            min_points_per_box,
+            max_points_per_box,
+            path,
+            id_offset,
+            point_divisions,
+    ):
         box_centre_mins = point_divisions - 0.5 * box_size
         box_centre_maxes = point_divisions + 0.5 * box_size
         i = 0
@@ -84,10 +106,19 @@ class Preprocessing:
             box = box[
                 np.logical_and(
                     np.logical_and(
-                        np.logical_and(box[:, 0] >= box_centre_mins[i, 0], box[:, 0] < box_centre_maxes[i, 0]),
-                        np.logical_and(box[:, 1] >= box_centre_mins[i, 1], box[:, 1] < box_centre_maxes[i, 1]),
+                        np.logical_and(
+                            box[:, 0] >= box_centre_mins[i, 0],
+                            box[:, 0] < box_centre_maxes[i, 0],
+                        ),
+                        np.logical_and(
+                            box[:, 1] >= box_centre_mins[i, 1],
+                            box[:, 1] < box_centre_maxes[i, 1],
+                        ),
                     ),
-                    np.logical_and(box[:, 2] >= box_centre_mins[i, 2], box[:, 2] < box_centre_maxes[i, 2]),
+                    np.logical_and(
+                        box[:, 2] >= box_centre_mins[i, 2],
+                        box[:, 2] < box_centre_maxes[i, 2],
+                    ),
                 )
             ]
 
@@ -123,13 +154,19 @@ class Preprocessing:
         num_boxes_z = int(np.ceil(Z_range / self.box_dimensions[2]))
 
         x_vals = np.linspace(
-            Xmin, Xmin + (num_boxes_x * self.box_dimensions[0]), int(num_boxes_x / (1 - self.box_overlap[0])) + 1
+            Xmin,
+            Xmin + (num_boxes_x * self.box_dimensions[0]),
+            int(num_boxes_x / (1 - self.box_overlap[0])) + 1,
         )
         y_vals = np.linspace(
-            Ymin, Ymin + (num_boxes_y * self.box_dimensions[1]), int(num_boxes_y / (1 - self.box_overlap[1])) + 1
+            Ymin,
+            Ymin + (num_boxes_y * self.box_dimensions[1]),
+            int(num_boxes_y / (1 - self.box_overlap[1])) + 1,
         )
         z_vals = np.linspace(
-            Zmin, Zmin + (num_boxes_z * self.box_dimensions[2]), int(num_boxes_z / (1 - self.box_overlap[2])) + 1
+            Zmin,
+            Zmin + (num_boxes_z * self.box_dimensions[2]),
+            int(num_boxes_z / (1 - self.box_overlap[2])) + 1,
         )
 
         box_centres = np.vstack(np.meshgrid(x_vals, y_vals, z_vals)).reshape(3, -1).T
@@ -175,7 +212,9 @@ class Preprocessing:
             x.join()
 
         self.preprocessing_time_end = time.time()
-        self.preprocessing_time_total = self.preprocessing_time_end - self.preprocessing_time_start
+        self.preprocessing_time_total = (
+                self.preprocessing_time_end - self.preprocessing_time_start
+        )
         print("Preprocessing took", self.preprocessing_time_total, "s")
         plot_summary_headers = [
             "PlotId",
@@ -225,7 +264,9 @@ class Preprocessing:
             "Total Run Time (s)",
         ]
 
-        plot_summary = pd.DataFrame(np.zeros((1, len(plot_summary_headers))), columns=plot_summary_headers)
+        plot_summary = pd.DataFrame(
+            np.zeros((1, len(plot_summary_headers))), columns=plot_summary_headers
+        )
 
         plot_summary["Preprocessing Time (s)"] = self.preprocessing_time_total
         plot_summary["PlotId"] = self.filename[:-4]

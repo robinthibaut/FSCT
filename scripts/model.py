@@ -1,8 +1,8 @@
 import torch
 import torch.nn.functional as F
-from torch_geometric.nn import knn_interpolate
 from torch.nn import Sequential as Seq, Linear as Lin, ReLU, BatchNorm1d as BN
 from torch_geometric.nn import PointConv, fps, radius, global_max_pool
+from torch_geometric.nn import knn_interpolate
 
 
 class SAModule(torch.nn.Module):
@@ -14,7 +14,9 @@ class SAModule(torch.nn.Module):
 
     def forward(self, x, pos, batch):
         idx = fps(pos, batch, ratio=self.ratio)
-        row, col = radius(pos, pos[idx], self.r, batch, batch[idx], max_num_neighbors=64)
+        row, col = radius(
+            pos, pos[idx], self.r, batch, batch[idx], max_num_neighbors=64
+        )
         edge_index = torch.stack([col, row], dim=0)
         x = self.conv(x, (pos, pos[idx]), edge_index)
         pos, batch = pos[idx], batch[idx]
@@ -35,7 +37,12 @@ class GlobalSAModule(torch.nn.Module):
 
 
 def MLP(channels, batch_norm=True):
-    return Seq(*[Seq(Lin(channels[i - 1], channels[i]), ReLU(), BN(channels[i])) for i in range(1, len(channels))])
+    return Seq(
+        *[
+            Seq(Lin(channels[i - 1], channels[i]), ReLU(), BN(channels[i]))
+            for i in range(1, len(channels))
+        ]
+    )
 
 
 class FPModule(torch.nn.Module):

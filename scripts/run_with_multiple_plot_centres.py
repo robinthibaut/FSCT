@@ -1,14 +1,21 @@
-from run_tools import FSCT, directory_mode, file_mode
 from other_parameters import other_parameters
-
+from run_tools import FSCT
 
 if __name__ == "__main__":
     """
     This script is an example of how to provide multiple different plot centres with your input point clouds.
     """
     point_clouds_to_process = [
-        ["E:/your_point_cloud1.las", [your_plot_centre_X_coord, your_plot_centre_Y_coord], your_plot_radius],
-        ["E:/your_point_cloud2.las", [your_plot_centre_X_coord, your_plot_centre_Y_coord], your_plot_radius],
+        [
+            "E:/your_point_cloud1.las",
+            [your_plot_centre_X_coord, your_plot_centre_Y_coord],
+            your_plot_radius,
+        ],
+        [
+            "E:/your_point_cloud2.las",
+            [your_plot_centre_X_coord, your_plot_centre_Y_coord],
+            your_plot_radius,
+        ],
     ]
 
     for point_cloud_filename, plot_centre, plot_radius in point_clouds_to_process:

@@ -1,17 +1,16 @@
-from mdutils.mdutils import MdUtils
-import markdown
-from mdutils import Html
-import pandas as pd
-import numpy as np
-from tools import load_file, subsample_point_cloud
-from matplotlib import pyplot as plt
 import os
-from scipy.spatial import ConvexHull
-from matplotlib import cm
-from matplotlib.patches import Patch
-from matplotlib.lines import Line2D
-import warnings
 import shutil
+import warnings
+
+import markdown
+import numpy as np
+import pandas as pd
+from matplotlib import pyplot as plt
+from matplotlib.lines import Line2D
+from mdutils import Html
+from mdutils.mdutils import MdUtils
+
+from tools import load_file
 
 
 class ReportWriter:
@@ -19,13 +18,15 @@ class ReportWriter:
         self.parameters = parameters
         self.filename = self.parameters["point_cloud_filename"].replace("\\", "/")
         self.output_dir = (
-            os.path.dirname(os.path.realpath(self.filename)).replace("\\", "/")
-            + "/"
-            + self.filename.split("/")[-1][:-4]
-            + "_FSCT_output/"
+                os.path.dirname(os.path.realpath(self.filename)).replace("\\", "/")
+                + "/"
+                + self.filename.split("/")[-1][:-4]
+                + "_FSCT_output/"
         )
         self.filename = self.filename.split("/")[-1]
-        self.plot_summary = pd.read_csv(self.output_dir + "plot_summary.csv", index_col=False)
+        self.plot_summary = pd.read_csv(
+            self.output_dir + "plot_summary.csv", index_col=False
+        )
 
         self.parameters["plot_centre"] = [
             float(self.plot_summary["Plot Centre X"]),
@@ -35,7 +36,9 @@ class ReportWriter:
         self.plot_area = float(self.plot_summary["Plot Area"])
         self.stems_per_ha = int(self.plot_summary["Stems/ha"])
         self.parameters["plot_radius"] = float(self.plot_summary["Plot Radius"])
-        self.parameters["plot_radius_buffer"] = float(self.plot_summary["Plot Radius Buffer"])
+        self.parameters["plot_radius_buffer"] = float(
+            self.plot_summary["Plot Radius Buffer"]
+        )
 
         self.tree_data = pd.read_csv(self.output_dir + "tree_data.csv")
         self.TreeId = np.array(self.tree_data["TreeId"])
@@ -79,7 +82,9 @@ class ReportWriter:
 
     def create_report(self):
         filename = self.output_dir + "Plot_Report"
-        mdFile = MdUtils(file_name=filename, title="Forest Structural Complexity Tool - Plot Report")
+        mdFile = MdUtils(
+            file_name=filename, title="Forest Structural Complexity Tool - Plot Report"
+        )
         mdFile.new_header(level=1, title="")  # style is set 'atx' format by default.
         level = 2
 
@@ -88,38 +93,59 @@ class ReportWriter:
         mdFile.new_header(
             level=level,
             title="Plot Centre (Local coords): X: "
-            + str(np.around(self.parameters["plot_centre"][0], 2))
-            + " m, Y: "
-            + str(np.around(self.parameters["plot_centre"][1], 2))
-            + " m",
+                  + str(np.around(self.parameters["plot_centre"][0], 2))
+                  + " m, Y: "
+                  + str(np.around(self.parameters["plot_centre"][1], 2))
+                  + " m",
         )
         if self.parameters["plot_radius"] != 0:
             mdFile.new_header(
                 level=level,
                 title="Plot Radius: "
-                + str(self.parameters["plot_radius"])
-                + " m, "
-                + " Plot Radius Buffer: "
-                + str(self.parameters["plot_radius_buffer"])
-                + " m, Plot Area: "
-                + str(np.around(self.plot_area, 3))
-                + " ha",
+                      + str(self.parameters["plot_radius"])
+                      + " m, "
+                      + " Plot Radius Buffer: "
+                      + str(self.parameters["plot_radius_buffer"])
+                      + " m, Plot Area: "
+                      + str(np.around(self.plot_area, 3))
+                      + " ha",
             )
         else:
-            mdFile.new_header(level=level, title="Plot Area: " + str(np.around(self.plot_area, 3)) + " ha")
+            mdFile.new_header(
+                level=level,
+                title="Plot Area: " + str(np.around(self.plot_area, 3)) + " ha",
+            )
 
         if self.DBH.shape[0] > 0:
             mdFile.new_header(level=level, title="Stems/ha:  " + str(self.stems_per_ha))
-            mdFile.new_header(level=level, title="Mean DBH: " + str(np.around(np.mean(self.DBH), 3)) + " m")
-            mdFile.new_header(level=level, title="Median DBH: " + str(np.around(np.median(self.DBH), 3)) + " m")
-            mdFile.new_header(level=level, title="Min DBH: " + str(np.around(np.min(self.DBH), 3)) + " m")
-            mdFile.new_header(level=level, title="Max DBH: " + str(np.around(np.max(self.DBH), 3)) + " m")
-
             mdFile.new_header(
-                level=level, title="Total Plot Stem Volume 1: " + str(np.around(np.sum(self.Volume_1), 3)) + " m3"
+                level=level,
+                title="Mean DBH: " + str(np.around(np.mean(self.DBH), 3)) + " m",
             )
             mdFile.new_header(
-                level=level, title="Total Plot Stem Volume 2: " + str(np.around(np.sum(self.Volume_2), 3)) + " m3"
+                level=level,
+                title="Median DBH: " + str(np.around(np.median(self.DBH), 3)) + " m",
+            )
+            mdFile.new_header(
+                level=level,
+                title="Min DBH: " + str(np.around(np.min(self.DBH), 3)) + " m",
+            )
+            mdFile.new_header(
+                level=level,
+                title="Max DBH: " + str(np.around(np.max(self.DBH), 3)) + " m",
+            )
+
+            mdFile.new_header(
+                level=level,
+                title="Total Plot Stem Volume 1: "
+                      + str(np.around(np.sum(self.Volume_1), 3))
+                      + " m3",
+            )
+            mdFile.new_header(
+                level=level,
+                title="Total Plot Stem Volume 2: "
+                      + str(np.around(np.sum(self.Volume_2), 3))
+                      + " m3",
             )
 
         else:
@@ -129,7 +155,10 @@ class ReportWriter:
         total_processing_time = float(self.plot_summary["Total Run Time (s)"])
 
         mdFile.new_header(
-            level=level, title="FSCT Processing Time: " + str(np.around(total_processing_time / 60.0, 1)) + " minutes"
+            level=level,
+            title="FSCT Processing Time: "
+                  + str(np.around(total_processing_time / 60.0, 1))
+                  + " minutes",
         )
 
         path = "Stem_Map.png"
@@ -149,17 +178,29 @@ class ReportWriter:
 
         mdFile.create_md_file()
 
-        markdown.markdownFromFile(input=filename + ".md", output=filename + ".html", encoding="utf8")
+        markdown.markdownFromFile(
+            input=filename + ".md", output=filename + ".html", encoding="utf8"
+        )
 
     def plot_outputs(self):
         self.DTM, _ = load_file(self.output_dir + "DTM.las")
         self.cwd_points, _ = load_file(self.output_dir + "cwd_points.las")
-        self.veg_dict = dict(x=0, y=1, z=2, red=3, green=4, blue=5, tree_id=6, height_above_dtm=7)
-        self.ground_veg, _ = load_file(self.output_dir + "ground_veg.las", headers_of_interest=list(self.veg_dict))
+        self.veg_dict = dict(
+            x=0, y=1, z=2, red=3, green=4, blue=5, tree_id=6, height_above_dtm=7
+        )
+        self.ground_veg, _ = load_file(
+            self.output_dir + "ground_veg.las", headers_of_interest=list(self.veg_dict)
+        )
 
-        self.ground_veg_map = self.ground_veg[:, [0, 1, self.veg_dict["height_above_dtm"]]]
-        self.ground_veg_map[self.ground_veg[:, self.veg_dict["height_above_dtm"]] >= 0.5, 2] = 1
-        self.ground_veg_map[self.ground_veg[:, self.veg_dict["height_above_dtm"]] < 0.5, 2] = 0.5
+        self.ground_veg_map = self.ground_veg[
+                              :, [0, 1, self.veg_dict["height_above_dtm"]]
+                              ]
+        self.ground_veg_map[
+            self.ground_veg[:, self.veg_dict["height_above_dtm"]] >= 0.5, 2
+        ] = 1
+        self.ground_veg_map[
+            self.ground_veg[:, self.veg_dict["height_above_dtm"]] < 0.5, 2
+        ] = 0.5
 
         dtmmin = np.min(self.DTM[:, :2], axis=0)
         dtmmax = np.max(self.DTM[:, :2], axis=0)
@@ -171,8 +212,14 @@ class ReportWriter:
         fig1 = plt.figure(figsize=(7, 7))
         ax1 = fig1.add_subplot(1, 1, 1)
         ax1.set_title("Plot Map - " + self.filename[:-4])
-        ax1.set_xlabel("Easting + " + str(np.around(self.parameters["plot_centre"][0], 2)) + " (m)")
-        ax1.set_ylabel("Northing + " + str(np.around(self.parameters["plot_centre"][1], 2)) + " (m)")
+        ax1.set_xlabel(
+            "Easting + " + str(np.around(self.parameters["plot_centre"][0], 2)) + " (m)"
+        )
+        ax1.set_ylabel(
+            "Northing + "
+            + str(np.around(self.parameters["plot_centre"][1], 2))
+            + " (m)"
+        )
         ax1.axis("equal")
         zmin = np.floor(np.min(self.DTM[:, 2]))
         zmax = np.ceil(np.max(self.DTM[:, 2]))
@@ -185,21 +232,30 @@ class ReportWriter:
         sub_levels = np.linspace(zmin, zmax, sub_zrange)
         sub_levels = sub_levels[
             sub_levels % contour_resolution != 0
-        ]  # remove sub contours where there are full size contours.
+            ]  # remove sub contours where there are full size contours.
 
         if self.parameters["plot_radius"] != 0:
             ax1.set_facecolor("whitesmoke")
             circle_face = plt.Circle(
-                xy=(0, 0), radius=self.parameters["plot_radius"], facecolor="white", edgecolor=None, zorder=1
+                xy=(0, 0),
+                radius=self.parameters["plot_radius"],
+                facecolor="white",
+                edgecolor=None,
+                zorder=1,
             )
             ax1.add_patch(circle_face)
             self.ground_veg_map = self.ground_veg_map[
-                np.linalg.norm(self.ground_veg_map[:, :2] - plot_centre, axis=1) < self.parameters["plot_radius"]
-            ]
+                np.linalg.norm(self.ground_veg_map[:, :2] - plot_centre, axis=1)
+                < self.parameters["plot_radius"]
+                ]
             self.cwd_points = self.cwd_points[
-                np.linalg.norm(self.cwd_points[:, :2] - plot_centre, axis=1) < self.parameters["plot_radius"]
-            ]
-            self.DTM = self.DTM[np.linalg.norm(self.DTM[:, :2] - plot_centre, axis=1) < self.parameters["plot_radius"]]
+                np.linalg.norm(self.cwd_points[:, :2] - plot_centre, axis=1)
+                < self.parameters["plot_radius"]
+                ]
+            self.DTM = self.DTM[
+                np.linalg.norm(self.DTM[:, :2] - plot_centre, axis=1)
+                < self.parameters["plot_radius"]
+                ]
 
         ax1.scatter(
             self.ground_veg_map[self.ground_veg_map[:, 2] == 0.5, 0] - plot_centre[0],
@@ -219,7 +275,11 @@ class ReportWriter:
         )
 
         circle_outline = plt.Circle(
-            xy=(0, 0), radius=self.parameters["plot_radius"], fill=False, edgecolor="k", zorder=3
+            xy=(0, 0),
+            radius=self.parameters["plot_radius"],
+            fill=False,
+            edgecolor="k",
+            zorder=3,
         )
         ax1.add_patch(circle_outline)
 
@@ -325,9 +385,20 @@ class ReportWriter:
                 markeredgecolor="k",
             ),
         ]
-        ax1.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, -0.2), ncol=2, facecolor="white")
+        ax1.legend(
+            handles=handles,
+            loc="lower center",
+            bbox_to_anchor=(0.5, -0.2),
+            ncol=2,
+            facecolor="white",
+        )
 
-        fig1.savefig(self.output_dir + "Stem_Map.png", dpi=600, bbox_inches="tight", pad_inches=0.0)
+        fig1.savefig(
+            self.output_dir + "Stem_Map.png",
+            dpi=600,
+            bbox_inches="tight",
+            pad_inches=0.0,
+        )
         plt.close()
 
         fig2 = plt.figure(figsize=(7, 7))
@@ -337,7 +408,9 @@ class ReportWriter:
         ax2.set_ylabel("Count")
         if self.DBH.shape[0] > 0:
             bin_width = 0.1
-            bins = np.arange(0, np.ceil(np.max(self.DBH) * 10) / 10 + bin_width, bin_width)
+            bins = np.arange(
+                0, np.ceil(np.max(self.DBH) * 10) / 10 + bin_width, bin_width
+            )
 
             ax2.hist(
                 self.DBH,
@@ -372,7 +445,12 @@ class ReportWriter:
                 edgecolor="black",
                 facecolor="green",
             )
-        fig3.savefig(self.output_dir + "Tree Height Distribution.png", dpi=600, bbox_inches="tight", pad_inches=0.0)
+        fig3.savefig(
+            self.output_dir + "Tree Height Distribution.png",
+            dpi=600,
+            bbox_inches="tight",
+            pad_inches=0.0,
+        )
         plt.close()
 
         fig4 = plt.figure(figsize=(7, 7))
@@ -382,7 +460,9 @@ class ReportWriter:
         ax4.set_ylabel("Count")
         if self.Volume_1.shape[0] > 0:
             bin_width = 0.1
-            bins = np.arange(0, np.ceil(np.max(self.Volume_1) * 10) / 10 + bin_width, bin_width)
+            bins = np.arange(
+                0, np.ceil(np.max(self.Volume_1) * 10) / 10 + bin_width, bin_width
+            )
 
             ax4.hist(
                 self.Volume_1,
@@ -392,7 +472,12 @@ class ReportWriter:
                 edgecolor="black",
                 facecolor="green",
             )
-        fig4.savefig(self.output_dir + "Tree Volume 1 Distribution.png", dpi=600, bbox_inches="tight", pad_inches=0.0)
+        fig4.savefig(
+            self.output_dir + "Tree Volume 1 Distribution.png",
+            dpi=600,
+            bbox_inches="tight",
+            pad_inches=0.0,
+        )
         plt.close()
 
         fig4 = plt.figure(figsize=(7, 7))
@@ -402,7 +487,9 @@ class ReportWriter:
         ax4.set_ylabel("Count")
         if self.Volume_2.shape[0] > 0:
             bin_width = 0.1
-            bins = np.arange(0, np.ceil(np.max(self.Volume_2) * 10) / 10 + bin_width, bin_width)
+            bins = np.arange(
+                0, np.ceil(np.max(self.Volume_2) * 10) / 10 + bin_width, bin_width
+            )
 
             ax4.hist(
                 self.Volume_2,
@@ -412,5 +499,10 @@ class ReportWriter:
                 edgecolor="black",
                 facecolor="green",
             )
-        fig4.savefig(self.output_dir + "Tree Volume 2 Distribution.png", dpi=600, bbox_inches="tight", pad_inches=0.0)
+        fig4.savefig(
+            self.output_dir + "Tree Volume 2 Distribution.png",
+            dpi=600,
+            bbox_inches="tight",
+            pad_inches=0.0,
+        )
         plt.close()
