@@ -149,8 +149,7 @@ mode.
 ### Recommended PC Specifications
 
 **Warning: FSCT is computationally expensive in its current form.** Fortunately, it is still considerably faster than a
-human
-at what it does.
+human at what it does.
 
 It is **strongly recommended** to have a CUDA compatible GPU (Nvidia) for running this tool.
 This can be run on CPU only, but expect inference to take a long time. **CPU also appears to give worse semantic
