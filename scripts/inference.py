@@ -11,11 +11,12 @@ import torch
 from sklearn.neighbors import NearestNeighbors
 from torch_geometric.data import Dataset, DataLoader, Data
 
-from model import Net
-from tools import get_fsct_path
-from tools import load_file, save_file
+from .model import Net
+from .tools import get_fsct_path, load_file, save_file
 
 sys.setrecursionlimit(10 ** 8)  # Can be necessary for dealing with large point clouds.
+
+__all__ = ["SemanticSegmentation"]
 
 
 class TestingDataset(Dataset, ABC):

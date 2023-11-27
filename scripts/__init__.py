@@ -1,3 +1,16 @@
-__all__ = ['augmentations', 'fsct_exceptions', 'model', 'tools', 'train_datasets', 'training_monitor', 'train', 'inference', 'measure', 'preprocessing', 'post_segmentation_script', 'report_writer', 'run_tools', 'run', 'run_with_multiple_plot_centres', 'combine_multiple_output_CSVs']
-
-
+from .augmentations import *
+from .combine_multiple_output_CSVs import *
+from .fsct_exceptions import *
+from .inference import *
+from .measure import *
+from .model import *
+from .post_segmentation_script import *
+from .preprocessing import *
+from .report_writer import *
+from .run import *
+from .run_tools import *
+from .run_with_multiple_plot_centres import *
+from .tools import *
+from .train import *
+from .train_datasets import *
+from .training_monitor import *

@@ -6,6 +6,8 @@ import torch
 from sklearn.neighbors import NearestNeighbors
 from torch_geometric.data import Dataset, Data
 
+__all__ = ["TrainingDataset", "ValidationDataset"]
+
 
 class TrainingDataset(Dataset):
     def __init__(self, root_dir, device, min_sample_points, max_sample_points):

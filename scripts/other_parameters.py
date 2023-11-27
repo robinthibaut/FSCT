@@ -3,6 +3,8 @@
 # to tune these better for your particular data. Almost everything here is a trade-off between different situations, so
 # optimisation is not straight-forward.
 
+__all__ = ["other_parameters"]
+
 other_parameters = dict(
     model_filename="model.pth",
     box_dimensions=[

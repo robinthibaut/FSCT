@@ -3,11 +3,13 @@ import os
 import tkinter as tk
 import tkinter.filedialog as fd
 
-from inference import SemanticSegmentation
-from measure import MeasureTree
-from post_segmentation_script import PostProcessing
-from preprocessing import Preprocessing
-from report_writer import ReportWriter
+from .inference import SemanticSegmentation
+from .measure import MeasureTree
+from .post_segmentation_script import PostProcessing
+from .preprocessing import Preprocessing
+from .report_writer import ReportWriter
+
+__all__ = ["FSCT", "directory_mode", "file_mode"]
 
 
 def FSCT(

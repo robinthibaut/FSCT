@@ -10,7 +10,9 @@ from matplotlib.lines import Line2D
 from mdutils import Html
 from mdutils.mdutils import MdUtils
 
-from tools import load_file
+from .tools import load_file
+
+__all__ = ["ReportWriter"]
 
 
 class ReportWriter:

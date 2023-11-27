@@ -1,5 +1,5 @@
-from other_parameters import other_parameters
-from run_tools import FSCT
+from .other_parameters import other_parameters
+from .run_tools import FSCT
 
 if __name__ == "__main__":
     """

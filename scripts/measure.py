@@ -14,8 +14,8 @@ from sklearn.neighbors import BallTree
 from sklearn.neighbors import NearestNeighbors
 from skspatial.objects import Plane
 
-from fsct_exceptions import DataQualityError
-from tools import (
+from .fsct_exceptions import DataQualityError
+from .tools import (
     get_fsct_path,
     load_file,
     save_file,
@@ -25,6 +25,8 @@ from tools import (
     get_heights_above_DTM,
     get_taper,
 )
+
+__all__ = ["MeasureTree"]
 
 
 class MeasureTree:

@@ -6,14 +6,16 @@ import numpy as np
 import pandas as pd
 from scipy import spatial
 
-from fsct_exceptions import DataQualityError
-from tools import (
+from .fsct_exceptions import DataQualityError
+from .tools import (
     load_file,
     save_file,
     get_heights_above_DTM,
 )
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
+
+__all__ = ["PostProcessing"]
 
 
 class PostProcessing:

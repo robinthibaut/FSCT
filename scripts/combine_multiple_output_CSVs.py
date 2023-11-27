@@ -1,6 +1,8 @@
 import pandas as pd
 
-from run_tools import file_mode
+from .run_tools import file_mode
+
+__all__ = ["combine_multiple_output_CSVs"]
 
 
 def combine_multiple_output_CSVs(point_clouds_to_process, csv_file_to_combine):

@@ -6,13 +6,15 @@ import time
 import numpy as np
 import pandas as pd
 
-from tools import (
+from .tools import (
     load_file,
     save_file,
     make_folder_structure,
     subsample_point_cloud,
     low_resolution_hack_mode,
 )
+
+__all__ = ["Preprocessing"]
 
 
 class Preprocessing:

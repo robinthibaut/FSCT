@@ -1,7 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from tools import get_fsct_path
+from .tools import get_fsct_path
+
+__all__ = ["training_plotter"]
 
 
 def training_plotter():

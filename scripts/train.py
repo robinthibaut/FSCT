@@ -10,10 +10,12 @@ import torch.nn as nn
 import torch.optim as optim
 from torch_geometric.data import DataLoader
 
-from fsct_exceptions import NoDataFound
-from model import Net
-from tools import load_file, save_file, get_fsct_path
-from train_datasets import TrainingDataset, ValidationDataset
+from .fsct_exceptions import NoDataFound
+from .model import Net
+from .tools import load_file, save_file, get_fsct_path
+from .train_datasets import TrainingDataset, ValidationDataset
+
+__all__ = ["TrainModel"]
 
 
 class TrainModel:

@@ -12,6 +12,10 @@ from scipy.interpolate import griddata
 from sklearn.cluster import DBSCAN
 from sklearn.neighbors import NearestNeighbors
 
+__all__ = ["get_fsct_path", "make_folder_structure", "subsample_point_cloud", "load_file", "save_file",
+           "get_heights_above_DTM", "cluster_dbscan", "cluster_hdbscan", "clustering", "low_resolution_hack_mode",
+           "get_taper"]
+
 
 def get_fsct_path(location_in_fsct=""):
     current_working_dir = os.getcwd()

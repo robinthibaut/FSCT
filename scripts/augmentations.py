@@ -2,6 +2,8 @@ import random
 
 import numpy as np
 
+__all__ = ["augmentations"]
+
 
 def augmentations(x, no_terrain, no_cwd):
     def rotate_3d(points, rotations):
