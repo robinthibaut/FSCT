@@ -19,10 +19,9 @@ __all__ = ["get_fsct_path", "make_folder_structure", "subsample_point_cloud", "l
 
 def get_fsct_path(location_in_fsct=""):
     current_working_dir = os.getcwd()
-    output_path = current_working_dir[: current_working_dir.index("FSCT") + 4]
-    if len(location_in_fsct) > 0:
-        output_path = os.path.join(output_path, location_in_fsct)
-    return output_path.replace("\\", "/")
+    output_path = os.path.dirname(current_working_dir)
+    output_path = os.path.join(output_path, location_in_fsct)
+    return output_path
 
 
 def make_folder_structure(filename):
