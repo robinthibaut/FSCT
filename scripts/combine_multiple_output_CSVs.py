@@ -13,7 +13,7 @@ def combine_multiple_output_CSVs(point_clouds_to_process, csv_file_to_combine):
     if len(point_clouds_to_process) > 1:
         for point_cloud_filename in point_clouds_to_process[1:]:
             report_filename = (
-                    point_cloud_filename[:-4] + "_FSCT_output/" + csv_file_to_combine
+                point_cloud_filename[:-4] + "_FSCT_output/" + csv_file_to_combine
             )
             # print(report_filename)
             combined_plot_summary_dataframe = pd.concat(

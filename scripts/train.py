@@ -59,8 +59,8 @@ class TrainModel:
                 print(directory, "directory created.")
 
             elif (
-                    "sample_dir" in directory
-                    and self.parameters["clean_sample_directories"]
+                "sample_dir" in directory
+                and self.parameters["clean_sample_directories"]
             ):
                 shutil.rmtree(directory, ignore_errors=True)
                 os.makedirs(directory)
@@ -88,13 +88,13 @@ class TrainModel:
 
     @staticmethod
     def threaded_boxes(
-            point_cloud,
-            box_size,
-            min_points_per_box,
-            max_points_per_box,
-            path,
-            id_offset,
-            point_divisions,
+        point_cloud,
+        box_size,
+        min_points_per_box,
+        max_points_per_box,
+        path,
+        id_offset,
+        point_divisions,
     ):
         box_size = np.array(box_size)
         box_centre_mins = point_divisions - 0.5 * box_size
@@ -146,10 +146,10 @@ class TrainModel:
         def get_box_centre_list(point_cloud_mins, num_boxes_array):
             box_centre_list = []
             for dimension_min, dimension_num_boxes, box_size_m, box_overlap in zip(
-                    point_cloud_mins,
-                    num_boxes_array,
-                    self.parameters["sample_box_size_m"],
-                    self.parameters["sample_box_overlap"],
+                point_cloud_mins,
+                num_boxes_array,
+                self.parameters["sample_box_size_m"],
+                self.parameters["sample_box_overlap"],
             ):
                 box_centre_list.append(
                     np.linspace(
@@ -197,10 +197,10 @@ class TrainModel:
         training_data_list = glob.glob(sample_dir + "*.npy")
         if len(training_data_list) > 0:
             id_offset = (
-                    np.max(
-                        [int(os.path.basename(i).split(".")[0]) for i in training_data_list]
-                    )
-                    + 1
+                np.max(
+                    [int(os.path.basename(i).split(".")[0]) for i in training_data_list]
+                )
+                + 1
             )
 
         for thread in range(self.parameters["num_cpu_cores_preprocessing"]):
@@ -424,7 +424,7 @@ class TrainModel:
                     _, preds = torch.max(outputs, 1)
                     running_loss += loss.detach().item()
                     running_acc += (
-                            torch.sum(preds == data.y.data).item() / data.y.shape[1]
+                        torch.sum(preds == data.y.data).item() / data.y.shape[1]
                     )
                     if i % 50 == 0:
                         print(

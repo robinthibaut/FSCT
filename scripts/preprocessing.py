@@ -23,7 +23,7 @@ class Preprocessing:
         self.parameters = parameters
         self.filename = self.parameters["point_cloud_filename"].replace("\\", "/")
         self.directory = (
-                os.path.dirname(os.path.realpath(self.filename)).replace("\\", "/") + "/"
+            os.path.dirname(os.path.realpath(self.filename)).replace("\\", "/") + "/"
         )
         self.filename = self.filename.split("/")[-1]
         self.box_dimensions = np.array(self.parameters["box_dimensions"])
@@ -68,8 +68,8 @@ class Preprocessing:
         )
 
         self.point_cloud = self.point_cloud[
-                           :, :3
-                           ]  # Trims off unneeded dimensions if present.
+            :, :3
+        ]  # Trims off unneeded dimensions if present.
 
         if self.parameters["low_resolution_point_cloud_hack_mode"]:
             self.point_cloud = low_resolution_hack_mode(
@@ -86,18 +86,18 @@ class Preprocessing:
 
         # Global shift the point cloud to avoid loss of precision during segmentation.
         self.point_cloud[:, :2] = (
-                self.point_cloud[:, :2] - self.parameters["plot_centre"]
+            self.point_cloud[:, :2] - self.parameters["plot_centre"]
         )
 
     @staticmethod
     def threaded_boxes(
-            point_cloud,
-            box_size,
-            min_points_per_box,
-            max_points_per_box,
-            path,
-            id_offset,
-            point_divisions,
+        point_cloud,
+        box_size,
+        min_points_per_box,
+        max_points_per_box,
+        path,
+        id_offset,
+        point_divisions,
     ):
         box_centre_mins = point_divisions - 0.5 * box_size
         box_centre_maxes = point_divisions + 0.5 * box_size
@@ -212,7 +212,7 @@ class Preprocessing:
 
         self.preprocessing_time_end = time.time()
         self.preprocessing_time_total = (
-                self.preprocessing_time_end - self.preprocessing_time_start
+            self.preprocessing_time_end - self.preprocessing_time_start
         )
         print("Preprocessing took", self.preprocessing_time_total, "s")
         plot_summary_headers = [

@@ -3,7 +3,6 @@ import os
 import shutil
 import sys
 import time
-from abc import ABC
 
 import numpy as np
 import pandas as pd
@@ -14,7 +13,7 @@ from torch_geometric.data import Dataset, DataLoader, Data
 from .model import Net
 from .tools import get_fsct_path, load_file, save_file
 
-sys.setrecursionlimit(10 ** 8)  # Can be necessary for dealing with large point clouds.
+sys.setrecursionlimit(10**8)  # Can be necessary for dealing with large point clouds.
 
 __all__ = ["SemanticSegmentation", "TestingDataset", "choose_most_confident_label"]
 
@@ -46,7 +45,7 @@ class TestingDataset(Dataset):
         return data
 
 
-def choose_most_confident_label(point_cloud, original_point_cloud):
+def choose_most_confident_label(point_cloud, original_point_cloud, num_cpu_cores):
     """
     Args:
         original_point_cloud: The original point cloud to be labeled.
@@ -58,7 +57,7 @@ def choose_most_confident_label(point_cloud, original_point_cloud):
 
     print("Choosing most confident labels...")
     neighbours = NearestNeighbors(
-        n_neighbors=16, algorithm="kd_tree", metric="euclidean", radius=0.05
+        n_neighbors=16, algorithm="kd_tree", metric="euclidean", radius=0.05, n_jobs=num_cpu_cores
     ).fit(point_cloud[:, :3])
     _, indices = neighbours.kneighbors(original_point_cloud[:, :3])
 
@@ -88,12 +87,12 @@ class SemanticSegmentation:
             )
         self.filename = self.parameters["point_cloud_filename"].replace("\\", "/")
         self.directory = (
-                os.path.dirname(os.path.realpath(self.filename)).replace("\\", "/") + "/"
+            os.path.dirname(os.path.realpath(self.filename)).replace("\\", "/") + "/"
         )
         self.filename = self.filename.split("/")[-1]
         self.output_dir = self.directory + self.filename[:-4] + "_FSCT_output/"
         self.working_dir = (
-                self.directory + self.filename[:-4] + "_FSCT_output/working_directory/"
+            self.directory + self.filename[:-4] + "_FSCT_output/working_directory/"
         )
 
         self.filename = "working_point_cloud.las"
@@ -126,7 +125,10 @@ class SemanticSegmentation:
         if self.parameters["use_CPU_only"]:
             model.load_state_dict(
                 torch.load(
-                    os.path.join(self.parameters["model_directory"], self.parameters["model_filename"]),
+                    os.path.join(
+                        self.parameters["model_directory"],
+                        self.parameters["model_filename"],
+                    ),
                     map_location=torch.device("cpu"),
                 ),
                 strict=False,
@@ -159,10 +161,10 @@ class SemanticSegmentation:
                 for batch in batches:
                     outputb = np.asarray(output[data.batch.cpu() == batch])
                     outputb[:, :3] = (
-                            outputb[:, :3]
-                            + np.asarray(data.local_shift.cpu())[
-                              3 * batch: 3 + (3 * batch)
-                              ]
+                        outputb[:, :3]
+                        + np.asarray(data.local_shift.cpu())[
+                            3 * batch : 3 + (3 * batch)
+                        ]
                     )
                     output_list.append(outputb)
 
@@ -181,7 +183,7 @@ class SemanticSegmentation:
         )
         original_point_cloud[:, :2] = original_point_cloud[:, :2] - self.plot_centre
         self.output = choose_most_confident_label(
-            self.output_point_cloud, original_point_cloud
+            self.output_point_cloud, original_point_cloud, self.parameters["num_cpu_cores"]
         )
         self.output = np.asarray(self.output, dtype="float64")
         self.output[:, :2] = self.output[:, :2] + self.plot_centre

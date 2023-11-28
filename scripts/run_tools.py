@@ -13,13 +13,13 @@ __all__ = ["FSCT", "directory_mode", "file_mode"]
 
 
 def FSCT(
-        parameters,
-        preprocess=True,
-        segmentation=True,
-        postprocessing=True,
-        measure_plot=True,
-        make_report=False,
-        clean_up_files=False,
+    parameters,
+    preprocess=True,
+    segmentation=True,
+    postprocessing=True,
+    measure_plot=True,
+    make_report=False,
+    clean_up_files=False,
 ):
     print("Current point cloud being processed: ", parameters["point_cloud_filename"])
     if parameters["num_cpu_cores"] == 0:

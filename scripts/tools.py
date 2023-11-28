@@ -12,9 +12,19 @@ from scipy.interpolate import griddata
 from sklearn.cluster import DBSCAN
 from sklearn.neighbors import NearestNeighbors
 
-__all__ = ["get_fsct_path", "make_folder_structure", "subsample_point_cloud", "load_file", "save_file",
-           "get_heights_above_DTM", "cluster_dbscan", "cluster_hdbscan", "clustering", "low_resolution_hack_mode",
-           "get_taper"]
+__all__ = [
+    "get_fsct_path",
+    "make_folder_structure",
+    "subsample_point_cloud",
+    "load_file",
+    "save_file",
+    "get_heights_above_DTM",
+    "cluster_dbscan",
+    "cluster_hdbscan",
+    "clustering",
+    "low_resolution_hack_mode",
+    "get_taper",
+]
 
 
 def get_fsct_path(location_in_fsct=""):
@@ -116,13 +126,13 @@ def subsample_point_cloud(pointcloud, min_spacing, num_cpu_cores=1):
 
 
 def load_file(
-        filename,
-        plot_centre=None,
-        plot_radius=0,
-        plot_radius_buffer=0,
-        silent=False,
-        headers_of_interest=None,
-        return_num_points=False,
+    filename,
+    plot_centre=None,
+    plot_radius=0,
+    plot_radius_buffer=0,
+    silent=False,
+    headers_of_interest=None,
+    return_num_points=False,
 ):
     if headers_of_interest is None:
         headers_of_interest = []
@@ -291,7 +301,7 @@ def low_resolution_hack_mode(point_cloud, num_iterations, min_spacing, num_cpu_c
 
 
 def get_taper(
-        single_tree_cyls, slice_heights, tree_base_height, taper_slice_thickness, plot_id=0
+    single_tree_cyls, slice_heights, tree_base_height, taper_slice_thickness, plot_id=0
 ):
     cyl_dict = dict(
         x=0,

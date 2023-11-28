@@ -20,10 +20,10 @@ class ReportWriter:
         self.parameters = parameters
         self.filename = self.parameters["point_cloud_filename"].replace("\\", "/")
         self.output_dir = (
-                os.path.dirname(os.path.realpath(self.filename)).replace("\\", "/")
-                + "/"
-                + self.filename.split("/")[-1][:-4]
-                + "_FSCT_output/"
+            os.path.dirname(os.path.realpath(self.filename)).replace("\\", "/")
+            + "/"
+            + self.filename.split("/")[-1][:-4]
+            + "_FSCT_output/"
         )
         self.filename = self.filename.split("/")[-1]
         self.plot_summary = pd.read_csv(
@@ -95,22 +95,22 @@ class ReportWriter:
         mdFile.new_header(
             level=level,
             title="Plot Centre (Local coords): X: "
-                  + str(np.around(self.parameters["plot_centre"][0], 2))
-                  + " m, Y: "
-                  + str(np.around(self.parameters["plot_centre"][1], 2))
-                  + " m",
+            + str(np.around(self.parameters["plot_centre"][0], 2))
+            + " m, Y: "
+            + str(np.around(self.parameters["plot_centre"][1], 2))
+            + " m",
         )
         if self.parameters["plot_radius"] != 0:
             mdFile.new_header(
                 level=level,
                 title="Plot Radius: "
-                      + str(self.parameters["plot_radius"])
-                      + " m, "
-                      + " Plot Radius Buffer: "
-                      + str(self.parameters["plot_radius_buffer"])
-                      + " m, Plot Area: "
-                      + str(np.around(self.plot_area, 3))
-                      + " ha",
+                + str(self.parameters["plot_radius"])
+                + " m, "
+                + " Plot Radius Buffer: "
+                + str(self.parameters["plot_radius_buffer"])
+                + " m, Plot Area: "
+                + str(np.around(self.plot_area, 3))
+                + " ha",
             )
         else:
             mdFile.new_header(
@@ -140,14 +140,14 @@ class ReportWriter:
             mdFile.new_header(
                 level=level,
                 title="Total Plot Stem Volume 1: "
-                      + str(np.around(np.sum(self.Volume_1), 3))
-                      + " m3",
+                + str(np.around(np.sum(self.Volume_1), 3))
+                + " m3",
             )
             mdFile.new_header(
                 level=level,
                 title="Total Plot Stem Volume 2: "
-                      + str(np.around(np.sum(self.Volume_2), 3))
-                      + " m3",
+                + str(np.around(np.sum(self.Volume_2), 3))
+                + " m3",
             )
 
         else:
@@ -159,8 +159,8 @@ class ReportWriter:
         mdFile.new_header(
             level=level,
             title="FSCT Processing Time: "
-                  + str(np.around(total_processing_time / 60.0, 1))
-                  + " minutes",
+            + str(np.around(total_processing_time / 60.0, 1))
+            + " minutes",
         )
 
         path = "Stem_Map.png"
@@ -195,8 +195,8 @@ class ReportWriter:
         )
 
         self.ground_veg_map = self.ground_veg[
-                              :, [0, 1, self.veg_dict["height_above_dtm"]]
-                              ]
+            :, [0, 1, self.veg_dict["height_above_dtm"]]
+        ]
         self.ground_veg_map[
             self.ground_veg[:, self.veg_dict["height_above_dtm"]] >= 0.5, 2
         ] = 1
@@ -234,7 +234,7 @@ class ReportWriter:
         sub_levels = np.linspace(zmin, zmax, sub_zrange)
         sub_levels = sub_levels[
             sub_levels % contour_resolution != 0
-            ]  # remove sub contours where there are full size contours.
+        ]  # remove sub contours where there are full size contours.
 
         if self.parameters["plot_radius"] != 0:
             ax1.set_facecolor("whitesmoke")
@@ -249,15 +249,15 @@ class ReportWriter:
             self.ground_veg_map = self.ground_veg_map[
                 np.linalg.norm(self.ground_veg_map[:, :2] - plot_centre, axis=1)
                 < self.parameters["plot_radius"]
-                ]
+            ]
             self.cwd_points = self.cwd_points[
                 np.linalg.norm(self.cwd_points[:, :2] - plot_centre, axis=1)
                 < self.parameters["plot_radius"]
-                ]
+            ]
             self.DTM = self.DTM[
                 np.linalg.norm(self.DTM[:, :2] - plot_centre, axis=1)
                 < self.parameters["plot_radius"]
-                ]
+            ]
 
         ax1.scatter(
             self.ground_veg_map[self.ground_veg_map[:, 2] == 0.5, 0] - plot_centre[0],

@@ -24,10 +24,10 @@ class PostProcessing:
         self.parameters = parameters
         self.filename = self.parameters["point_cloud_filename"].replace("\\", "/")
         self.output_dir = (
-                os.path.dirname(os.path.realpath(self.filename)).replace("\\", "/")
-                + "/"
-                + self.filename.split("/")[-1][:-4]
-                + "_FSCT_output/"
+            os.path.dirname(os.path.realpath(self.filename)).replace("\\", "/")
+            + "/"
+            + self.filename.split("/")[-1][:-4]
+            + "_FSCT_output/"
         )
         self.filename = self.filename.split("/")[-1]
 
@@ -49,7 +49,7 @@ class PostProcessing:
         )  # Add height_above_DTM to the headers.
         self.label_index = self.headers_of_interest.index("label")
         self.point_cloud[:, self.label_index] = (
-                self.point_cloud[:, self.label_index] + 1
+            self.point_cloud[:, self.label_index] + 1
         )  # index offset since noise_class was removed from inference.
         self.plot_summary = pd.read_csv(
             self.output_dir + "plot_summary.csv", index_col=None
@@ -80,8 +80,8 @@ class PostProcessing:
                 radius = self.parameters["grid_resolution"] * 3
                 indices = terrain_kdtree.query_ball_point([x, y], r=radius)
                 while (
-                        len(indices) <= 100
-                        and radius <= self.parameters["grid_resolution"] * 5
+                    len(indices) <= 100
+                    and radius <= self.parameters["grid_resolution"] * 5
                 ):
                     radius += self.parameters["grid_resolution"]
                     indices = terrain_kdtree.query_ball_point([x, y], r=radius)
@@ -108,11 +108,11 @@ class PostProcessing:
                 ]
             ]
             crop_radius = (
-                    self.parameters["plot_radius"] + self.parameters["plot_radius_buffer"]
+                self.parameters["plot_radius"] + self.parameters["plot_radius_buffer"]
             )
             grid_points = grid_points[
                 np.linalg.norm(grid_points[:, :2] - plot_centre, axis=1) <= crop_radius
-                ]
+            ]
 
         elif crop_dtm:
             distances, _ = full_point_cloud_kdtree.query(grid_points[:, :2], k=[1])
@@ -124,7 +124,7 @@ class PostProcessing:
     def process_point_cloud(self):
         self.terrain_points = self.point_cloud[
             self.point_cloud[:, self.label_index] == self.terrain_class_label
-            ]  # -2 is now the class label as we added the height above DTM column.
+        ]  # -2 is now the class label as we added the height above DTM column.
 
         try:
             self.DTM = self.make_DTM(crop_dtm=True)
@@ -146,15 +146,15 @@ class PostProcessing:
         )  # Add a height above DTM column to the point clouds.
         self.terrain_points = self.point_cloud[
             self.point_cloud[:, self.label_index] == self.terrain_class_label
-            ]
+        ]
         self.terrain_points_rejected = np.vstack(
             (
                 self.terrain_points[
                     self.terrain_points[:, -1] <= -above_and_below_DTM_trim_dist
-                    ],
+                ],
                 self.terrain_points[
                     self.terrain_points[:, -1] > above_and_below_DTM_trim_dist
-                    ],
+                ],
             )
         )
         self.terrain_points = self.terrain_points[
@@ -172,7 +172,7 @@ class PostProcessing:
         )
         self.stem_points = self.point_cloud[
             self.point_cloud[:, self.label_index] == self.stem_class_label
-            ]
+        ]
         self.terrain_points = np.vstack(
             (
                 self.terrain_points,
@@ -186,10 +186,10 @@ class PostProcessing:
         )
         self.stem_points_rejected = self.stem_points[
             self.stem_points[:, -1] <= above_and_below_DTM_trim_dist
-            ]
+        ]
         self.stem_points = self.stem_points[
             self.stem_points[:, -1] > above_and_below_DTM_trim_dist
-            ]
+        ]
         save_file(
             self.output_dir + "stem_points.las",
             self.stem_points,
@@ -199,7 +199,7 @@ class PostProcessing:
 
         self.vegetation_points = self.point_cloud[
             self.point_cloud[:, self.label_index] == self.vegetation_class_label
-            ]
+        ]
         self.terrain_points = np.vstack(
             (
                 self.terrain_points,
@@ -213,10 +213,10 @@ class PostProcessing:
         )
         self.vegetation_points_rejected = self.vegetation_points[
             self.vegetation_points[:, -1] <= above_and_below_DTM_trim_dist
-            ]
+        ]
         self.vegetation_points = self.vegetation_points[
             self.vegetation_points[:, -1] > above_and_below_DTM_trim_dist
-            ]
+        ]
         save_file(
             self.output_dir + "vegetation_points.las",
             self.vegetation_points,
@@ -226,7 +226,7 @@ class PostProcessing:
 
         self.cwd_points = self.point_cloud[
             self.point_cloud[:, self.label_index] == self.cwd_class_label
-            ]  # -2 is now the class label as we added the height above DTM column.
+        ]  # -2 is now the class label as we added the height above DTM column.
         self.terrain_points = np.vstack(
             (
                 self.terrain_points,
@@ -243,7 +243,7 @@ class PostProcessing:
             (
                 self.cwd_points[
                     self.cwd_points[:, -1] <= above_and_below_DTM_trim_dist
-                    ],
+                ],
                 self.cwd_points[self.cwd_points[:, -1] >= 10],
             )
         )
@@ -277,7 +277,7 @@ class PostProcessing:
 
         self.post_processing_time_end = time.time()
         self.post_processing_time = (
-                self.post_processing_time_end - self.post_processing_time_start
+            self.post_processing_time_end - self.post_processing_time_start
         )
         print("Post-processing took", self.post_processing_time, "seconds")
         self.plot_summary["Post processing time (s)"] = self.post_processing_time

@@ -128,7 +128,7 @@ def augmentations(x, y, min_sample_points):
         return points
 
     if np.all(y != 0) and np.all(
-            y != 2
+        y != 2
     ):  # if no terrain or CWD are present, it's ok to rotate extremely. Terrain shouldn't be above stems or CWD.
         rotations = [
             np.random.uniform(-90, 90),
