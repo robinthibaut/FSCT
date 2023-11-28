@@ -186,13 +186,10 @@ class Preprocessing:
                 if points_to_assign.shape[0] == 0:
                     break
         threads = []
-        prev_id_offset = 0
         for thread in range(self.num_cpu_cores):
             id_offset = 0
             for t in range(thread):
                 id_offset = id_offset + len(point_divisions[t])
-            # print('Thread:', thread, prev_id_offset, id_offset)
-            prev_id_offset = id_offset
             t = threading.Thread(
                 target=Preprocessing.threaded_boxes,
                 args=(

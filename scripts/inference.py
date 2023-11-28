@@ -16,20 +16,20 @@ from .tools import get_fsct_path, load_file, save_file
 
 sys.setrecursionlimit(10 ** 8)  # Can be necessary for dealing with large point clouds.
 
-__all__ = ["SemanticSegmentation"]
+__all__ = ["SemanticSegmentation", "TestingDataset", "choose_most_confident_label"]
 
 
-class TestingDataset(Dataset, ABC):
+class TestingDataset(Dataset):
     def __init__(self, root_dir, points_per_box, device):
-        super().__init__()
+        super(TestingDataset, self).__init__()
         self.filenames = glob.glob(root_dir + "*.npy")
         self.device = device
         self.points_per_box = points_per_box
 
-    def __len__(self):
+    def len(self):
         return len(self.filenames)
 
-    def __getitem__(self, index):
+    def get(self, index):
         point_cloud = np.load(self.filenames[index])
         pos = point_cloud[:, :3]
         pos = (
